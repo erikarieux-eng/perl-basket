@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+<title>PERL Basket</title>
+<meta name="theme-color" content="#0D1B2A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════ TOKENS ═══════════════════════ */
+:root{
+  --orange:#E87722;--orange-l:#FF9A4D;--orange-d:#C45F10;
+  --navy:#0D1B2A;--navy-mid:#1A2E45;--navy-light:#243B55;--navy-card:#1E3150;
+  --white:#FFF;--grey:#8BA3BE;--grey-l:#C5D5E5;
+  --green:#2ECC71;--red:#E74C3C;--yellow:#F1C40F;--blue:#3498db;
+  --r:14px;--rs:8px;
+  --font-d:'Barlow Condensed',sans-serif;
+  --font-b:'Barlow',sans-serif;
+  --nav-h:70px;--hdr-h:60px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{
+  height:100%;background:var(--navy);color:var(--white);
+  font-family:var(--font-b);overflow:hidden;
+}
+
+/* ═══════════════════════ SHELL ═══════════════════════ */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+#hdr{
+  height:var(--hdr-h);flex-shrink:0;background:var(--navy-mid);
+  display:flex;align-items:center;padding:0 16px;gap:12px;
+  border-bottom:3px solid var(--orange);z-index:20;position:relative;
+}
+#hdr .back{
+  width:40px;height:40px;border-radius:10px;background:var(--navy-light);
+  border:none;color:var(--white);font-size:22px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .15s;
+}
+#hdr .back:hover{background:var(--orange)}
+#hdr .htitle{font-family:var(--font-d);font-size:20px;font-weight:700;flex:1;letter-spacing:.5px}
+#hdr .htitle small{display:block;font-size:11px;font-weight:400;color:var(--grey);letter-spacing:0}
+#hdr .rbadge{
+  background:var(--orange);color:var(--white);font-size:10px;font-weight:700;
+  letter-spacing:1px;padding:4px 10px;border-radius:6px;text-transform:uppercase;flex-shrink:0;
+}
+
+#content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+
+#nav{
+  height:var(--nav-h);flex-shrink:0;background:var(--navy-mid);
+  border-top:2px solid var(--navy-light);display:flex;z-index:20;
+}
+#nav.hide{display:none}
+.nb{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;border:none;background:none;color:var(--grey);
+  font-family:var(--font-b);font-size:10px;font-weight:600;letter-spacing:.3px;
+  cursor:pointer;padding:6px 4px;position:relative;transition:color .2s;
+}
+.nb .ni{font-size:26px;line-height:1;transition:transform .2s}
+.nb.on{color:var(--orange)}
+.nb.on .ni{transform:scale(1.2)}
+.nb.on::after{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:3px;background:var(--orange);border-radius:0 0 4px 4px;
+}
+
+/* ═══════════════════════ SCREENS ═══════════════════════ */
+.scr{display:none;animation:fadeIn .2s ease;padding-bottom:16px}
+.scr.on{display:block}
+@keyframes fadeIn{from{opacity:0;translateY(5px)}to{opacity:1;translateY(0)}}
+
+/* ═══════════════════════ LOGIN ═══════════════════════ */
+#scr-login{
+  min-height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:32px 20px;
+  background:linear-gradient(160deg,var(--navy) 0%,var(--navy-mid) 60%,#150e00 100%);
+}
+#scr-login.on{display:flex}
+.logo-wrap{text-align:center;margin-bottom:40px}
+.logo-ball{font-size:80px;line-height:1;animation:bob 2.5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.logo-name{
+  font-family:var(--font-d);font-size:48px;font-weight:900;
+  color:var(--orange);letter-spacing:4px;margin-top:10px;
+}
+.logo-sub{font-size:12px;color:var(--grey);letter-spacing:5px;text-transform:uppercase;margin-top:4px}
+
+.lcards{display:flex;flex-direction:column;gap:12px;width:100%;max-width:400px}
+.lcard{
+  background:var(--navy-card);border-radius:var(--r);
+  border:2px solid var(--navy-light);overflow:hidden;
+  transition:border-color .2s;
+}
+.lcard.open{border-color:var(--orange)}
+.lcard-hd{
+  display:flex;align-items:center;gap:14px;padding:18px 20px;
+  cursor:pointer;user-select:none;
+}
+.lcard-ico{font-size:30px;width:46px;text-align:center}
+.lcard-inf{flex:1}
+.lcard-ttl{font-family:var(--font-d);font-size:20px;font-weight:700;letter-spacing:.5px}
+.lcard-sub{font-size:12px;color:var(--grey);margin-top:2px}
+.lcard-arr{font-size:20px;color:var(--grey);transition:transform .25s}
+.lcard.open .lcard-arr{transform:rotate(90deg)}
+.lcard-body{display:none;padding:0 20px 20px}
+.lcard.open .lcard-body{display:block}
+
+/* ═══════════════════════ FORMS ═══════════════════════ */
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-size:11px;font-weight:700;letter-spacing:1px;
+  color:var(--grey);text-transform:uppercase;margin-bottom:7px;
+}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--navy-light);
+  border:2px solid var(--navy-light);
+  border-radius:var(--rs);color:var(--white);
+  font-family:var(--font-b);font-size:16px;
+  padding:13px 16px;outline:none;
+  transition:border-color .2s;
+  -webkit-appearance:none;appearance:none;
+  cursor:text;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--orange);background:var(--navy-mid);
+}
+.field input::placeholder{color:var(--grey)}
+.field select{cursor:pointer}
+.field select option{background:var(--navy-mid);color:var(--white)}
+.field textarea{resize:vertical;min-height:80px;line-height:1.5}
+
+.btn{
+  display:block;width:100%;padding:16px;border-radius:var(--rs);
+  border:none;font-family:var(--font-d);font-size:18px;font-weight:700;
+  letter-spacing:.5px;cursor:pointer;text-transform:uppercase;
+  transition:transform .12s,opacity .2s;text-align:center;
+}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--orange);color:var(--white)}
+.btn-p:hover{background:var(--orange-l)}
+.btn-s{background:var(--navy-light);color:var(--white)}
+.btn-s:hover{background:var(--navy-mid);border:1px solid var(--grey)}
+.btn-d{background:var(--red);color:var(--white)}
+.btn-sm{padding:10px 18px;font-size:14px;width:auto;display:inline-block}
+.bico{
+  width:46px;height:46px;border-radius:var(--rs);border:none;
+  background:var(--navy-light);color:var(--white);font-size:22px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;flex-shrink:0;
+}
+.bico:hover,.bico:active{background:var(--orange)}
+
+/* ═══════════════════════ CARDS ═══════════════════════ */
+.psec{padding:14px 16px 0}
+.stitle{
+  font-family:var(--font-d);font-size:15px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:var(--orange);
+  margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.card{
+  background:var(--navy-card);border-radius:var(--r);
+  border:1.5px solid var(--navy-light);margin-bottom:10px;overflow:hidden;
+  transition:border-color .2s;
+}
+.card:hover{border-color:rgba(232,119,34,.4)}
+.card-hd{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.card-body{padding:0 16px 14px;display:none}
+.card.exp .card-body{display:block}
+.cico{
+  width:44px;height:44px;border-radius:10px;background:var(--navy-light);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+}
+.cinf{flex:1;min-width:0}
+.cttl{font-family:var(--font-d);font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.csub{font-size:12px;color:var(--grey);margin-top:2px}
+.crgt{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
+.bo{background:rgba(232,119,34,.2);color:var(--orange)}
+.bg{background:rgba(46,204,113,.2);color:var(--green)}
+.br{background:rgba(231,76,60,.2);color:var(--red)}
+.bb{background:rgba(52,152,219,.2);color:var(--blue)}
+.bgr{background:rgba(139,163,190,.15);color:var(--grey)}
+
+/* ═══════════════════════ HOME ═══════════════════════ */
+.hero{
+  background:linear-gradient(135deg,var(--navy-mid),var(--navy-light));
+  padding:22px 18px;border-bottom:3px solid var(--orange);
+  display:flex;align-items:center;gap:16px;
+}
+.hero-ball{font-size:52px}
+.hero-name{font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--orange);letter-spacing:1px}
+.hero-sub{font-size:13px;color:var(--grey-l);margin-top:3px}
+
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.htile{
+  background:var(--navy-card);border-radius:var(--r);
+  border:1.5px solid var(--navy-light);
+  padding:20px 14px;display:flex;flex-direction:column;
+  align-items:center;gap:8px;cursor:pointer;
+  transition:border-color .2s,transform .12s;text-align:center;
+}
+.htile:hover{border-color:rgba(232,119,34,.5)}
+.htile:active{transform:scale(.96)}
+.htile.live{border-color:var(--orange);background:rgba(232,119,34,.08)}
+.ticon{font-size:34px;line-height:1}
+.tlabel{font-family:var(--font-d);font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--grey-l)}
+.tcount{font-family:var(--font-d);font-size:32px;font-weight:900;color:var(--white);line-height:1}
+.htile.wide{grid-column:1/-1;flex-direction:row;justify-content:space-between;padding:18px 20px;text-align:left}
+
+/* ═══════════════════════ SCOREBOARD ═══════════════════════ */
+.scoreboard{
+  background:linear-gradient(135deg,var(--navy-mid),var(--navy-light));
+  border-radius:var(--r);border:2px solid var(--orange);
+  padding:22px 18px;margin:16px;
+}
+.score-teams{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.score-team{flex:1;text-align:center}
+.score-tname{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--grey-l);margin-bottom:8px;letter-spacing:.5px}
+.score-pts{font-family:var(--font-d);font-size:72px;font-weight:900;line-height:1;color:var(--white)}
+.score-sep{font-family:var(--font-d);font-size:44px;font-weight:900;color:var(--orange)}
+.score-meta{text-align:center;margin-top:10px;font-size:12px;color:var(--grey)}
+
+.score-ctrls{padding:0 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sctrl{background:var(--navy-card);border-radius:var(--r);border:1.5px solid var(--navy-light);padding:14px}
+.sctrl-ttl{font-family:var(--font-d);font-size:13px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;text-align:center}
+.sbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sbtn{
+  padding:12px 0;border-radius:var(--rs);border:none;
+  font-family:var(--font-d);font-size:18px;font-weight:700;
+  cursor:pointer;transition:transform .1s;
+}
+.sbtn:active{transform:scale(.9)}
+.sbtn-a{background:var(--orange);color:var(--white)}
+.sbtn-s{background:var(--navy-light);color:var(--grey-l)}
+
+.match-acts{padding:0 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ═══════════════════════ JOUEURS ═══════════════════════ */
+.cat-hdr{
+  background:var(--navy-mid);border-bottom:2px solid var(--orange);
+  padding:13px 16px;display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;
+}
+.cat-hdr h3{font-family:var(--font-d);font-size:19px;font-weight:700;letter-spacing:1px}
+.cat-count{font-size:13px;color:var(--grey)}
+.cat-body{padding:10px 16px;display:none}
+.cat-body.open{display:block}
+
+.prow{
+  display:flex;align-items:center;gap:12px;
+  background:var(--navy-card);border-radius:var(--rs);
+  padding:13px 14px;margin-bottom:8px;
+  border:1.5px solid var(--navy-light);cursor:pointer;
+  transition:border-color .2s;
+}
+.prow:hover,.prow:active{border-color:var(--orange)}
+.pavatar{
+  width:42px;height:42px;border-radius:50%;background:var(--navy-light);
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:900;color:var(--orange);
+  font-family:var(--font-d);flex-shrink:0;
+}
+.pinf{flex:1;min-width:0}
+.pname{font-family:var(--font-d);font-size:17px;font-weight:700}
+.pmeta{font-size:11px;color:var(--grey);margin-top:2px}
+
+/* ═══════════════════════ PRÉSENCES ═══════════════════════ */
+.preslist{display:flex;flex-direction:column;gap:8px;padding-top:12px}
+.presrow{
+  display:flex;align-items:center;gap:10px;
+  background:var(--navy-card);border-radius:var(--rs);
+  padding:12px 14px;border:1.5px solid var(--navy-light);
+}
+.presname{flex:1;font-size:15px;font-weight:600}
+.prestgl{display:flex;gap:6px}
+.pbtn{
+  padding:7px 14px;border-radius:6px;border:1.5px solid;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;background:transparent;
+}
+.pbtn.p{border-color:var(--green);color:var(--green);background:rgba(46,204,113,.15)}
+.pbtn.a{border-color:var(--red);color:var(--red);background:rgba(231,76,60,.15)}
+.pbtn.off{border-color:var(--navy-light);color:var(--grey);background:transparent}
+
+/* ═══════════════════════ PROFIL ═══════════════════════ */
+.prof-hdr{
+  background:linear-gradient(135deg,var(--navy-mid),var(--navy-light));
+  padding:28px 18px;display:flex;flex-direction:column;align-items:center;
+  gap:12px;border-bottom:3px solid var(--orange);
+}
+.prof-av{
+  width:76px;height:76px;border-radius:50%;background:var(--navy-light);
+  border:3px solid var(--orange);display:flex;align-items:center;justify-content:center;
+  font-size:34px;font-weight:900;color:var(--orange);font-family:var(--font-d);
+}
+.prof-name{font-family:var(--font-d);font-size:28px;font-weight:900;letter-spacing:.5px}
+.prof-sub{font-size:13px;color:var(--grey)}
+
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
+.scard{
+  background:var(--navy-card);border-radius:var(--r);
+  border:1.5px solid var(--navy-light);padding:18px;text-align:center;
+}
+.sval{font-family:var(--font-d);font-size:38px;font-weight:900;color:var(--orange);line-height:1}
+.slbl{font-size:11px;color:var(--grey);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+/* ═══════════════════════ CONVOCATIONS ═══════════════════════ */
+.day-grp{margin-bottom:16px}
+.day-lbl{
+  font-family:var(--font-d);font-size:13px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);
+  padding:8px 16px 6px;border-left:3px solid var(--orange);
+  margin:0 16px 8px;display:flex;align-items:center;justify-content:space-between;
+}
+.pdf-btn{
+  background:var(--orange);color:var(--white);border:none;
+  padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;
+  cursor:pointer;letter-spacing:.5px;font-family:var(--font-d);
+}
+.pdf-btn:hover{background:var(--orange-l)}
+
+/* ═══════════════════════ TEMPS JEU ═══════════════════════ */
+.tjrow{
+  display:flex;align-items:center;gap:10px;
+  background:var(--navy-card);border-radius:var(--rs);
+  padding:12px 14px;margin-bottom:8px;border:1.5px solid var(--navy-light);
+}
+.tjname{flex:1;font-size:15px;font-weight:600}
+.tjinput{
+  width:64px;background:var(--navy-light);border:2px solid var(--navy-light);
+  border-radius:6px;color:var(--white);font-size:16px;font-weight:700;
+  padding:8px;text-align:center;outline:none;
+}
+.tjinput:focus{border-color:var(--orange)}
+
+/* ═══════════════════════ PUBLIC ═══════════════════════ */
+.mcard-pub{
+  background:var(--navy-card);border-radius:var(--r);
+  border:1.5px solid var(--navy-light);margin:0 16px 10px;overflow:hidden;
+}
+.mcard-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px}
+.mscore{display:flex;align-items:center;gap:8px}
+.msnum{font-family:var(--font-d);font-size:34px;font-weight:900}
+.mssep{font-size:22px;color:var(--grey)}
+.mcard-ft{background:var(--navy-light);padding:8px 16px;font-size:12px;color:var(--grey);display:flex;gap:16px}
+
+/* ═══════════════════════ MODAL ═══════════════════════ */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;
+  display:flex;align-items:flex-end;justify-content:center;
+  animation:fadeIn .2s ease;
+}
+.overlay.hide{display:none}
+.modal{
+  background:var(--navy-mid);border-radius:20px 20px 0 0;
+  width:100%;max-width:520px;max-height:88vh;overflow-y:auto;
+  padding:24px 22px 36px;border-top:3px solid var(--orange);
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateY(50px)}to{transform:translateY(0)}}
+.modal-ttl{
+  font-family:var(--font-d);font-size:22px;font-weight:700;
+  margin-bottom:20px;display:flex;align-items:center;gap:10px;
+}
+.mcls{margin-left:auto;background:none;border:none;color:var(--grey);font-size:24px;cursor:pointer;padding:0 4px}
+.macts{display:flex;gap:10px;margin-top:18px}
+.macts .btn{flex:1}
+
+/* ═══════════════════════ TOAST ═══════════════════════ */
+.toast{
+  position:fixed;top:72px;left:50%;transform:translateX(-50%);
+  background:var(--navy-mid);border:2px solid var(--orange);
+  color:var(--white);padding:12px 28px;border-radius:var(--rs);
+  font-size:14px;font-weight:600;z-index:300;pointer-events:none;
+  white-space:nowrap;animation:fadeIn .2s ease;
+}
+.toast.hide{display:none}
+.toast.ok{border-color:var(--green)}
+.toast.err{border-color:var(--red)}
+
+/* ═══════════════════════ LOADER ═══════════════════════ */
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;gap:14px;color:var(--grey);font-size:13px}
+.spin{width:38px;height:38px;border:3px solid var(--navy-light);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════ FAB ═══════════════════════ */
+.fab{
+  position:fixed;right:20px;bottom:calc(var(--nav-h) + 16px);
+  width:58px;height:58px;border-radius:50%;background:var(--orange);
+  color:var(--white);box-shadow:0 4px 24px rgba(232,119,34,.55);
+  border:none;font-size:28px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  z-index:50;transition:transform .15s;
+}
+.fab:hover{transform:scale(1.08)}
+.fab:active{transform:scale(.92)}
+.fab.hide{display:none}
+
+/* ═══════════════════════ EMPTY ═══════════════════════ */
+.empty{padding:48px 20px;text-align:center;color:var(--grey)}
+.empty .ei{font-size:52px;margin-bottom:14px}
+.empty p{font-size:14px}
+
+/* ═══════════════════════ UTILS ═══════════════════════ */
+.hide{display:none!important}
+.row{display:flex;align-items:center;gap:10px}
+.rowb{display:flex;align-items:center;justify-content:space-between}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.div{height:1px;background:var(--navy-light);margin:10px 0}
+.tgr{color:var(--grey)}.tor{color:var(--orange)}.tgn{color:var(--green)}.trd{color:var(--red)}
+.fw7{font-weight:700}.fw9{font-weight:900}
+.irow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--navy-light)}
+.irow:last-child{border-bottom:none}
+.irow .ik{font-size:13px;color:var(--grey)}
+.irow .iv{font-size:14px;font-weight:600}
+
+/* ═══════════════════════ RESPONSIVE PC ═══════════════════════ */
+@media(min-width:768px){
+  #app{max-width:480px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,.5)}
+  html{background:#060f1a;display:flex;align-items:stretch;justify-content:center}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="hdr">
+    <button class="back hide" id="backBtn" onclick="goBack()">←</button>
+    <div class="htitle" id="hTitle">PERL Basket<small id="hSub"></small></div>
+    <span class="rbadge hide" id="rBadge"></span>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- LOGIN -->
+    <div class="scr on" id="scr-login">
+      <div class="logo-wrap">
+        <div class="logo-ball">🏀</div>
+        <div class="logo-name" id="loginClub">PERL Basket</div>
+        <div class="logo-sub">Espace Club</div>
+      </div>
+      <div class="lcards">
+
+        <div class="lcard" id="lc-coach">
+          <div class="lcard-hd" onclick="toggleLC('coach')">
+            <div class="lcard-ico">🎽</div>
+            <div class="lcard-inf">
+              <div class="lcard-ttl">Coach / Admin</div>
+              <div class="lcard-sub">Accès complet</div>
+            </div>
+            <div class="lcard-arr">›</div>
+          </div>
+          <div class="lcard-body">
+            <div class="field">
+              <label>Mot de passe</label>
+              <input type="password" id="coachPwd" placeholder="Entrez le mot de passe" autocomplete="current-password">
+            </div>
+            <button class="btn btn-p" onclick="loginCoach()">Se connecter</button>
+          </div>
+        </div>
+
+        <div class="lcard" id="lc-joueur">
+          <div class="lcard-hd" onclick="toggleLC('joueur')">
+            <div class="lcard-ico">🏀</div>
+            <div class="lcard-inf">
+              <div class="lcard-ttl">Joueur</div>
+              <div class="lcard-sub">Mon espace perso</div>
+            </div>
+            <div class="lcard-arr">›</div>
+          </div>
+          <div class="lcard-body">
+            <div class="field">
+              <label>N° Licence</label>
+              <input type="text" id="jLicence" placeholder="Ex: 123456" autocomplete="username">
+            </div>
+            <div class="field">
+              <label>Nom de famille</label>
+              <input type="text" id="jNom" placeholder="DUPONT" autocomplete="family-name">
+            </div>
+            <button class="btn btn-p" onclick="loginJoueur()">Se connecter</button>
+          </div>
+        </div>
+
+        <div class="lcard" onclick="loginPublic()" style="cursor:pointer">
+          <div class="lcard-hd">
+            <div class="lcard-ico">👨‍👩‍👧</div>
+            <div class="lcard-inf">
+              <div class="lcard-ttl">Parents / Public</div>
+              <div class="lcard-sub">Résultats & calendrier</div>
+            </div>
+            <div class="lcard-arr">›</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- COACH HOME -->
+    <div class="scr" id="scr-coach-home">
+      <div class="hero">
+        <div class="hero-ball">🏀</div>
+        <div>
+          <div class="hero-name" id="heroClub">PERL Basket</div>
+          <div class="hero-sub" id="heroSaison">Saison 2025-2026</div>
+        </div>
+      </div>
+      <div class="hgrid">
+        <div class="htile" onclick="go('scr-joueurs')">
+          <div class="ticon">🏀</div><div class="tlabel">Joueurs</div>
+          <div class="tcount" id="cntJ">—</div>
+        </div>
+        <div class="htile" onclick="go('scr-matchs')">
+          <div class="ticon">🏆</div><div class="tlabel">Matchs</div>
+          <div class="tcount" id="cntM">—</div>
+        </div>
+        <div class="htile" onclick="go('scr-trainings')">
+          <div class="ticon">📋</div><div class="tlabel">Entraînements</div>
+          <div class="tcount" id="cntT">—</div>
+        </div>
+        <div class="htile" onclick="go('scr-convos')">
+          <div class="ticon">📄</div><div class="tlabel">Convocations</div>
+          <div class="tcount" id="cntC">—</div>
+        </div>
+        <div class="htile wide live hide" id="liveTile" onclick="openLive()">
+          <div class="row" style="gap:14px">
+            <div class="ticon">🔴</div>
+            <div>
+              <div class="tlabel">Match en cours</div>
+              <div id="liveInfo" style="font-family:var(--font-d);font-size:19px;font-weight:700;color:var(--orange)">—</div>
+            </div>
+          </div>
+          <div style="font-family:var(--font-d);font-size:38px;font-weight:900" id="liveScore">0 - 0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOUEURS -->
+    <div class="scr" id="scr-joueurs"><div id="joueursList"></div></div>
+
+    <!-- JOUEUR DETAIL -->
+    <div class="scr" id="scr-joueur-detail"><div id="joueurDetail"></div></div>
+
+    <!-- MATCHS -->
+    <div class="scr" id="scr-matchs"><div id="matchsList"></div></div>
+
+    <!-- MATCH LIVE -->
+    <div class="scr" id="scr-live"><div id="liveContent"></div></div>
+
+    <!-- TRAININGS -->
+    <div class="scr" id="scr-trainings"><div id="trainingsList"></div></div>
+
+    <!-- TRAINING DETAIL -->
+    <div class="scr" id="scr-training-detail"><div id="trainingDetail"></div></div>
+
+    <!-- CONVOCATIONS -->
+    <div class="scr" id="scr-convos"><div id="convosList"></div></div>
+
+    <!-- JOUEUR HOME -->
+    <div class="scr" id="scr-joueur-home"><div id="joueurHome"></div></div>
+
+    <!-- PUBLIC HOME -->
+    <div class="scr" id="scr-public"><div id="publicHome"></div></div>
+
+  </div>
+
+  <!-- NAV -->
+  <div id="nav" class="hide">
+    <button class="nb on" id="nb-home" onclick="navHome()">
+      <span class="ni">🏠</span>Accueil
+    </button>
+    <button class="nb" id="nb-joueurs" onclick="go('scr-joueurs')" style="display:none">
+      <span class="ni">🏀</span>Joueurs
+    </button>
+    <button class="nb" id="nb-matchs" onclick="go('scr-matchs')" style="display:none">
+      <span class="ni">🏆</span>Matchs
+    </button>
+    <button class="nb" id="nb-trainings" onclick="go('scr-trainings')" style="display:none">
+      <span class="ni">📋</span>Training
+    </button>
+    <button class="nb" id="nb-convos" onclick="go('scr-convos')" style="display:none">
+      <span class="ni">📄</span>Convos
+    </button>
+    <button class="nb" id="nb-profil" onclick="navProfil()" style="display:none">
+      <span class="ni">👤</span>Profil
+    </button>
+    <button class="nb" id="nb-logout" onclick="logout()">
+      <span class="ni">🚪</span>Quitter
+    </button>
+  </div>
+
+</div><!-- /app -->
+
+<button class="fab hide" id="fab" onclick="fabAction()">+</button>
+
+<div class="overlay hide" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-ttl" id="modalTtl"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast hide" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  CONFIG — URL de ton Apps Script
+// ══════════════════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbyU7k6hX4rzNj5C51FaRVCtrBgt3W1BNUbvHqRKXa0_KuCIxfHgW3FYe1oz5dG9phAApw/exec';
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const S = {
+  role:null, joueur:null, config:{}, cats:[],
+  cur:'scr-login', hist:[], presBuffer:{},
+  liveId:null
+};
+
+// ══════════════════════════════════════════════
+//  API — fetch CORS via Apps Script
+// ══════════════════════════════════════════════
+async function api(action, data={}) {
+  const url = API_URL + '?action=' + encodeURIComponent(action) +
+              '&data=' + encodeURIComponent(JSON.stringify(data));
+  const r = await fetch(url);
+  return await r.json();
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+window.addEventListener('load', async () => {
+  try {
+    const r = await api('getConfig');
+    if(r.success){ S.config=r.data; document.getElementById('loginClub').textContent=r.data.club_nom||'PERL Basket'; }
+    const rc = await api('getCategories');
+    if(rc.success) S.cats=rc.data;
+  } catch(e){ console.warn(e); }
+});
+
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+function showScr(id, push=true) {
+  if(push && S.cur!==id) S.hist.push(S.cur);
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id)?.classList.add('on');
+  S.cur=id;
+  document.getElementById('content').scrollTop=0;
+  updateUI();
+}
+
+function go(id) {
+  showScr(id);
+  if(id==='scr-joueurs') loadJoueurs();
+  if(id==='scr-matchs') loadMatchs();
+  if(id==='scr-trainings') loadTrainings();
+  if(id==='scr-convos') loadConvos();
+}
+
+function navHome() {
+  S.hist=[];
+  if(S.role==='coach'){ showScr('scr-coach-home',false); loadCoachHome(); }
+  else if(S.role==='joueur') showScr('scr-joueur-home',false);
+  else showScr('scr-public',false);
+}
+
+function navProfil() {
+  if(S.role==='joueur'&&S.joueur) { showScr('scr-joueur-detail'); renderJoueurDetail(S.joueur.id); }
+}
+
+function goBack() {
+  if(!S.hist.length) return;
+  const prev=S.hist.pop();
+  showScr(prev,false);
+  if(prev==='scr-matchs') loadMatchs();
+  if(prev==='scr-trainings') loadTrainings();
+  if(prev==='scr-joueurs') loadJoueurs();
+  if(prev==='scr-convos') loadConvos();
+}
+
+function updateUI() {
+  const back=document.getElementById('backBtn');
+  const nav=document.getElementById('nav');
+  const badge=document.getElementById('rBadge');
+  const fab=document.getElementById('fab');
+  const titles={
+    'scr-login':['PERL Basket',''],
+    'scr-coach-home':['Accueil','Espace Coach'],
+    'scr-joueurs':['Joueurs',''],
+    'scr-joueur-detail':['Profil',''],
+    'scr-matchs':['Matchs',''],
+    'scr-live':['Live Score',''],
+    'scr-trainings':['Entraînements',''],
+    'scr-training-detail':['Séance',''],
+    'scr-convos':['Convocations',''],
+    'scr-joueur-home':['Mon Espace',''],
+    'scr-public':['Résultats',''],
+  };
+  const t=titles[S.cur]||['PERL Basket',''];
+  const ht=document.getElementById('hTitle');
+  ht.childNodes[0].textContent=t[0];
+  document.getElementById('hSub').textContent=t[1];
+
+  back.classList.toggle('hide', S.hist.length===0);
+  fab.classList.add('hide');
+
+  if(S.cur==='scr-login'){ nav.classList.add('hide'); badge.classList.add('hide'); return; }
+  nav.classList.remove('hide'); badge.classList.remove('hide');
+
+  document.getElementById('nb-joueurs').style.display=S.role==='coach'?'':'none';
+  document.getElementById('nb-matchs').style.display=S.role?'':'none';
+  document.getElementById('nb-trainings').style.display=S.role==='coach'?'':'none';
+  document.getElementById('nb-convos').style.display=S.role==='coach'?'':'none';
+  document.getElementById('nb-profil').style.display=S.role==='joueur'?'':'none';
+
+  if(['scr-joueurs','scr-matchs','scr-trainings','scr-convos'].includes(S.cur)&&S.role==='coach')
+    fab.classList.remove('hide');
+
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  const nm={'scr-coach-home':'nb-home','scr-joueur-home':'nb-home','scr-public':'nb-home',
+            'scr-joueurs':'nb-joueurs','scr-matchs':'nb-matchs','scr-trainings':'nb-trainings',
+            'scr-convos':'nb-convos','scr-joueur-detail':'nb-profil'};
+  if(nm[S.cur]) document.getElementById(nm[S.cur])?.classList.add('on');
+  badge.textContent={coach:'COACH',joueur:'JOUEUR',public:'PUBLIC'}[S.role]||'';
+}
+
+// ══════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════
+function toggleLC(r) {
+  ['coach','joueur'].forEach(x=>{
+    const c=document.getElementById('lc-'+x);
+    if(c) c.classList.toggle('open', x===r && !c.classList.contains('open'));
+  });
+}
+
+async function loginCoach() {
+  const pwd=document.getElementById('coachPwd').value;
+  if(!pwd) return toast('Entrez le mot de passe','err');
+  toast('Connexion...','');
+  try {
+    const r=await api('login',{role:'coach',password:pwd});
+    if(r.success){ S.role='coach'; showScr('scr-coach-home',false); await loadCoachHome(); }
+    else toast(r.error||'Mot de passe incorrect','err');
+  } catch(e){ toast('Erreur de connexion','err'); }
+}
+
+async function loginJoueur() {
+  const licence=document.getElementById('jLicence').value.trim();
+  const nom=document.getElementById('jNom').value.trim();
+  if(!licence||!nom) return toast('Renseignez licence et nom','err');
+  toast('Connexion...','');
+  try {
+    const r=await api('login',{role:'joueur',licence,nom});
+    if(r.success){ S.role='joueur'; S.joueur=r.joueur; showScr('scr-joueur-home',false); await renderJoueurHome(); }
+    else toast(r.error||'Joueur introuvable','err');
+  } catch(e){ toast('Erreur de connexion','err'); }
+}
+
+function loginPublic() {
+  S.role='public'; showScr('scr-public',false); loadPublicHome();
+}
+
+function logout() {
+  S.role=null; S.joueur=null; S.hist=[];
+  showScr('scr-login',false);
+  document.getElementById('coachPwd').value='';
+}
+
+// ══════════════════════════════════════════════
+//  COACH HOME
+// ══════════════════════════════════════════════
+async function loadCoachHome() {
+  document.getElementById('heroClub').textContent=S.config.club_nom||'PERL Basket';
+  document.getElementById('heroSaison').textContent='Saison '+(S.config.saison||'—');
+  try {
+    const [rj,rm,rt,rc]=await Promise.all([
+      api('getJoueurs',{}), api('getMatchs',{}),
+      api('getEntrainements',{}), api('getConvocations',{})
+    ]);
+    document.getElementById('cntJ').textContent=rj.success?rj.data.length:'—';
+    document.getElementById('cntM').textContent=rm.success?rm.data.length:'—';
+    document.getElementById('cntT').textContent=rt.success?rt.data.length:'—';
+    document.getElementById('cntC').textContent=rc.success?rc.data.length:'—';
+    const live=rm.success?rm.data.find(m=>m.statut==='en_cours'):null;
+    if(live){
+      S.liveId=live.id;
+      document.getElementById('liveTile').classList.remove('hide');
+      document.getElementById('liveInfo').textContent=live.adversaire+' · '+(live.categorie||'');
+      document.getElementById('liveScore').textContent=live.score_nous+' - '+live.score_eux;
+    }
+  } catch(e){}
+}
+
+// ══════════════════════════════════════════════
+//  JOUEURS
+// ══════════════════════════════════════════════
+async function loadJoueurs() {
+  const el=document.getElementById('joueursList');
+  el.innerHTML='<div class="loader"><div class="spin"></div>Chargement...</div>';
+  try {
+    const r=await api('getJoueurs',{});
+    if(!r.success) throw new Error(r.error);
+    const g=r.grouped||{};
+    const cats=S.cats.length?S.cats:Object.keys(g);
+    let html='';
+    cats.forEach(cat=>{
+      const js=g[cat]; if(!js||!js.length) return;
+      html+=`<div class="cat-hdr" onclick="toggleCat('cat-${cat}')">
+        <h3>🏀 ${cat}</h3><span class="cat-count">${js.length} joueur${js.length>1?'s':''}</span>
+      </div><div class="cat-body" id="cat-${cat}">`;
+      js.forEach(j=>{
+        const ini=((j.prenom||'')[0]||'')+((j.nom||'')[0]||'');
+        html+=`<div class="prow" onclick="showJoueurDetail('${j.id}')">
+          <div class="pavatar">${ini.toUpperCase()}</div>
+          <div class="pinf">
+            <div class="pname">${j.prenom} ${j.nom}</div>
+            <div class="pmeta">Né(e) ${j.annee_naissance||'—'} · Licence ${j.numero_licence||'—'}</div>
+          </div>
+          <span class="badge ${j.statut==='blesse'?'br':'bg'}">${j.statut==='blesse'?'🤕 Blessé':'✓ Actif'}</span>
+        </div>`;
+      });
+      html+='</div>';
+    });
+    el.innerHTML=html||'<div class="empty"><div class="ei">🏀</div><p>Aucun joueur</p></div>';
+  } catch(e){ el.innerHTML=`<div class="empty"><div class="ei">⚠️</div><p>${e.message}</p></div>`; }
+}
+
+function toggleCat(id){ document.getElementById(id)?.classList.toggle('open'); }
+
+async function showJoueurDetail(id){ showScr('scr-joueur-detail'); await renderJoueurDetail(id); }
+
+async function renderJoueurDetail(id) {
+  const el=document.getElementById('joueurDetail');
+  el.innerHTML='<div class="loader"><div class="spin"></div></div>';
+  try {
+    const [rj,rs]=await Promise.all([api('getJoueur',{id}), api('getStatsJoueur',{joueur_id:id})]);
+    if(!rj.success) throw new Error(rj.error);
+    const j=rj.data; const st=rs.success?rs.data:{};
+    const ini=((j.prenom||'')[0]||'')+((j.nom||'')[0]||'');
+    const bl=j.statut==='blesse';
+    el.innerHTML=`
+      <div class="prof-hdr">
+        <div class="prof-av">${ini.toUpperCase()}</div>
+        <div class="prof-name">${j.prenom} ${j.nom}</div>
+        <div class="prof-sub">${j.categorie||''} · Né(e) ${j.annee_naissance||'—'}</div>
+        <span class="badge ${bl?'br':'bg'}">${bl?'🤕 Blessé':'✓ Actif'}</span>
+      </div>
+      <div class="psec mt12">
+        <div class="stitle">📋 Informations</div>
+        <div class="card"><div class="card-body" style="display:block">
+          <div class="irow"><span class="ik">🪪 Licence</span><span class="iv">${j.numero_licence||'—'}</span></div>
+          <div class="irow"><span class="ik">📅 Année naissance</span><span class="iv">${j.annee_naissance||'—'}</span></div>
+          <div class="irow"><span class="ik">📂 Catégorie</span><span class="iv">${j.categorie||'—'}</span></div>
+          <div class="irow"><span class="ik">📧 Email</span><span class="iv">${j.email||'—'}</span></div>
+          <div class="irow"><span class="ik">📱 Téléphone</span><span class="iv">${j.telephone||'—'}</span></div>
+          ${j.notes?`<div class="irow"><span class="ik">📝 Notes</span><span class="iv">${j.notes}</span></div>`:''}
+        </div></div>
+      </div>
+      <div class="sgrid">
+        <div class="scard"><div class="sval">${st.matchs_joues||0}</div><div class="slbl">Matchs joués</div></div>
+        <div class="scard"><div class="sval">${st.minutes_totales||0}</div><div class="slbl">Minutes</div></div>
+        <div class="scard"><div class="sval">${st.convocations||0}</div><div class="slbl">Convocations</div></div>
+        <div class="scard"><div class="sval">${st.taux_presence||0}%</div><div class="slbl">Présence training</div></div>
+      </div>
+      ${S.role==='coach'?`<div class="psec mt8" style="padding-bottom:20px">
+        <div class="row" style="gap:10px">
+          <button class="btn btn-s btn-sm" style="flex:1" onclick="openEditJoueur('${j.id}')">✏️ Modifier</button>
+          <button class="btn ${bl?'btn-p':'btn-d'} btn-sm" style="flex:1"
+            onclick="toggleBlessure('${j.id}','${bl?'actif':'blesse'}')">
+            ${bl?'✓ Rétabli':'🤕 Blessé'}
+          </button>
+        </div>
+      </div>`:''}
+    `;
+  } catch(e){ el.innerHTML=`<div class="empty"><div class="ei">⚠️</div><p>${e.message}</p></div>`; }
+}
+
+async function toggleBlessure(id,s){ await api('saveJoueur',{id,statut:s}); toast(s==='blesse'?'Joueur blessé':'Joueur rétabli','ok'); renderJoueurDetail(id); }
+
+function fabAction(){
+  if(S.cur==='scr-joueurs') openJoueurForm(null);
+  else if(S.cur==='scr-matchs') openMatchForm(null);
+  else if(S.cur==='scr-trainings') openTrainingForm();
+  else if(S.cur==='scr-convos') openConvoForm(null);
+}
+
+// ── Formulaire joueur ──
+function openEditJoueur(id){ api('getJoueur',{id}).then(r=>{ if(r.success) openJoueurForm(r.data); }); }
+function openJoueurForm(j){
+  j=j||{};
+  const co=S.cats.map(c=>`<option value="${c}" ${j.categorie===c?'selected':''}>${c}</option>`).join('');
+  openModal(j.id?'✏️ Modifier joueur':'➕ Nouveau joueur',`
+    <div class="field"><label>Prénom</label><input id="fP" value="${j.prenom||''}"></div>
+    <div class="field"><label>Nom</label><input id="fN" value="${j.nom||''}"></div>
+    <div class="field"><label>Année de naissance</label><input id="fA" type="number" value="${j.annee_naissance||''}"></div>
+    <div class="field"><label>N° Licence</label><input id="fL" value="${j.numero_licence||''}"></div>
+    <div class="field"><label>Catégorie</label><select id="fC">${co}</select></div>
+    <div class="field"><label>Email</label><input id="fE" type="email" value="${j.email||''}"></div>
+    <div class="field"><label>Téléphone</label><input id="fT" value="${j.telephone||''}"></div>
+    <div class="field"><label>Notes</label><textarea id="fNo">${j.notes||''}</textarea></div>
+    <div class="macts">
+      <button class="btn btn-s" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-p" onclick="saveJoueurForm('${j.id||''}')">Enregistrer</button>
+    </div>
+  `);
+}
+async function saveJoueurForm(id){
+  const d={id:id||undefined,prenom:$('fP').value.trim(),nom:$('fN').value.trim(),
+    annee_naissance:$('fA').value,numero_licence:$('fL').value.trim(),
+    categorie:$('fC').value,email:$('fE').value.trim(),
+    telephone:$('fT').value.trim(),notes:$('fNo').value.trim(),statut:'actif'};
+  if(!d.prenom||!d.nom) return toast('Prénom et nom requis','err');
+  const r=await api('saveJoueur',d);
+  if(r.success){ closeModal(); toast('Joueur enregistré ✓','ok'); loadJoueurs(); }
+  else toast(r.error,'err');
+}
+
+// ══════════════════════════════════════════════
+//  MATCHS
+// ══════════════════════════════════════════════
+async function loadMatchs() {
+  const el=document.getElementById('matchsList');
+  el.innerHTML='<div class="loader"><div class="spin"></div>Chargement...</div>';
+  try {
+    const r=await api('getMatchs',{});
+    if(!r.success) throw new Error(r.error);
+    if(!r.data.length){ el.innerHTML='<div class="empty"><div class="ei">🏆</div><p>Aucun match</p></div>'; return; }
+    let html='<div style="padding:12px 16px 0">';
+    r.data.forEach(m=>{
+      const si={programme:{l:'Programmé',c:'bgr'},en_cours:{l:'🔴 En cours',c:'bo'},termine:{l:'Terminé',c:'bg'}}[m.statut]||{l:m.statut,c:'bgr'};
+      html+=`<div class="card"><div class="card-hd" onclick="openMatch('${m.id}')">
+        <div class="cico">🏆</div>
+        <div class="cinf">
+          <div class="cttl">vs ${m.adversaire||'?'}</div>
+          <div class="csub">${fmtDate(m.date)} · ${m.heure||''} · ${m.categorie||''}</div>
+        </div>
+        <div class="crgt">
+          <span class="badge ${si.c}">${si.l}</span>
+          ${m.statut!=='programme'?`<span style="font-family:var(--font-d);font-size:20px;font-weight:900">${m.score_nous} - ${m.score_eux}</span>`:''}
+        </div>
+      </div></div>`;
+    });
+    html+='</div>'; el.innerHTML=html;
+  } catch(e){ el.innerHTML=`<div class="empty"><div class="ei">⚠️</div><p>${e.message}</p></div>`; }
+}
+
+async function openMatch(id){
+  const r=await api('getMatch',{id});
+  if(!r.success) return toast(r.error,'err');
+  if(r.data.statut==='en_cours'){ showScr('scr-live'); renderLive(r.data); }
+  else showMatchMenu(r.data);
+}
+function openLive(){ if(S.liveId) openMatch(S.liveId); }
+
+function showMatchMenu(m){
+  openModal('🏆 '+( m.adversaire||'Match'),`
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:13px;color:var(--grey)">${fmtDate(m.date)} · ${m.heure||''} · ${m.lieu||''}</div>
+      <div style="font-family:var(--font-d);font-size:15px;font-weight:700;margin-top:6px">${m.categorie||''} · ${m.domicile==='true'?'🏠 Domicile':'✈️ Extérieur'}</div>
+      ${m.statut!=='programme'?`<div style="font-family:var(--font-d);font-size:40px;font-weight:900;margin-top:10px">${m.score_nous} – ${m.score_eux}</div>`:''}
+    </div>
+    <div class="macts" style="flex-direction:column">
+      ${m.statut==='programme'?`<button class="btn btn-p" onclick="startMatch('${m.id}')">▶️ Démarrer le match</button>`:''}
+      ${m.statut==='en_cours'?`<button class="btn btn-p" onclick="closeModal();openMatch('${m.id}')">🔴 Reprendre le live</button>`:''}
+      <button class="btn btn-s" onclick="openTempsJeu('${m.id}')">⏱ Temps de jeu</button>
+      ${S.role==='coach'?`<button class="btn btn-s" onclick="closeModal();openMatchForm(null,'${m.id}')">✏️ Modifier</button>`:''}
+      ${S.role==='coach'?`<button class="btn btn-d" onclick="delMatch('${m.id}')">🗑 Supprimer</button>`:''}
+      <button class="btn btn-s" onclick="closeModal()">Fermer</button>
+    </div>
+  `);
+}
+
+async function startMatch(id){
+  await api('updateStatutMatch',{id,statut:'en_cours',periode:1});
+  closeModal();
+  const r=await api('getMatch',{id});
+  if(r.success){ showScr('scr-live'); renderLive(r.data); }
+}
+
+function renderLive(m){
+  const el=document.getElementById('liveContent');
+  el.innerHTML=`
+    <div class="scoreboard">
+      <div style="text-align:center;margin-bottom:14px">
+        <span class="badge bo">🔴 ${m.categorie||''} · Quart-temps ${m.periode||1}</span>
+      </div>
+      <div class="score-teams">
+        <div class="score-team">
+          <div class="score-tname">${S.config.club_nom||'NOUS'}</div>
+          <div class="score-pts" id="sNous">${m.score_nous||0}</div>
+        </div>
+        <div class="score-sep">—</div>
+        <div class="score-team">
+          <div class="score-tname">${m.adversaire||'EUX'}</div>
+          <div class="score-pts" id="sEux">${m.score_eux||0}</div>
+        </div>
+      </div>
+      <div class="score-meta">${fmtDate(m.date)} · ${m.heure||''} · ${m.lieu||''}</div>
+    </div>
+    <div class="score-ctrls">
+      <div class="sctrl">
+        <div class="sctrl-ttl">${S.config.club_nom||'Nous'}</div>
+        <div class="sbtns">
+          <button class="sbtn sbtn-a" onclick="addScore('${m.id}','nous',1)">+1</button>
+          <button class="sbtn sbtn-a" onclick="addScore('${m.id}','nous',2)">+2</button>
+          <button class="sbtn sbtn-a" onclick="addScore('${m.id}','nous',3)">+3</button>
+          <button class="sbtn sbtn-s" onclick="addScore('${m.id}','nous',1,'-')">-1</button>
+          <button class="sbtn sbtn-s" onclick="addScore('${m.id}','nous',2,'-')">-2</button>
+          <button class="sbtn sbtn-s" onclick="addScore('${m.id}','nous',3,'-')">-3</button>
+        </div>
+      </div>
+      <div class="sctrl">
+        <div class="sctrl-ttl">${m.adversaire||'Eux'}</div>
+        <div class="sbtns">
+          <button class="sbtn sbtn-a" onclick="addScore('${m.id}','eux',1)">+1</button>
+          <button class="sbtn sbtn-a" onclick="addScore('${m.id}','eux',2)">+2</button>
+          <button class="sbtn sbtn-a" onclick="addScore('${m.id}','eux',3)">+3</button>
+          <button class="sbtn sbtn-s" onclick="addScore('${m.id}','eux',1,'-')">-1</button>
+          <button class="sbtn sbtn-s" onclick="addScore('${m.id}','eux',2,'-')">-2</button>
+          <button class="sbtn sbtn-s" onclick="addScore('${m.id}','eux',3,'-')">-3</button>
+        </div>
+      </div>
+    </div>
+    <div class="match-acts">
+      <button class="btn btn-s" onclick="changerPeriode('${m.id}',${(parseInt(m.periode)||1)+1})">
+        ⏭ Période ${(parseInt(m.periode)||1)+1}
+      </button>
+      <button class="btn btn-d" onclick="terminerMatch('${m.id}')">✓ Terminer</button>
+    </div>
+  `;
+}
+
+async function addScore(id,eq,pts,op='+'){
+  const r=await api('updateScore',{id,equipe:eq,points:pts,operation:op});
+  if(r.success){
+    document.getElementById('sNous').textContent=r.score_nous;
+    document.getElementById('sEux').textContent=r.score_eux;
+    document.getElementById('liveScore').textContent=r.score_nous+' - '+r.score_eux;
+  }
+}
+async function changerPeriode(id,p){ await api('updateStatutMatch',{id,statut:'en_cours',periode:p}); const r=await api('getMatch',{id}); if(r.success) renderLive(r.data); }
+async function terminerMatch(id){ await api('updateStatutMatch',{id,statut:'termine'}); toast('Match terminé ✓','ok'); goBack(); loadMatchs(); }
+
+function openMatchForm(m,id){
+  if(id){ api('getMatch',{id}).then(r=>{ if(r.success) _matchForm(r.data); }); return; }
+  _matchForm(m||{});
+}
+function _matchForm(m){
+  const co=S.cats.map(c=>`<option value="${c}" ${m.categorie===c?'selected':''}>${c}</option>`).join('');
+  openModal(m.id?'✏️ Modifier match':'➕ Nouveau match',`
+    <div class="field"><label>Date</label><input id="mD" type="date" value="${m.date||''}"></div>
+    <div class="field"><label>Heure</label><input id="mH" type="time" value="${m.heure||''}"></div>
+    <div class="field"><label>Adversaire</label><input id="mA" value="${m.adversaire||''}"></div>
+    <div class="field"><label>Catégorie</label><select id="mC">${co}</select></div>
+    <div class="field"><label>Lieu</label><input id="mL" value="${m.lieu||''}"></div>
+    <div class="field"><label>Domicile / Extérieur</label>
+      <select id="mDom">
+        <option value="true" ${m.domicile==='true'?'selected':''}>🏠 Domicile</option>
+        <option value="false" ${m.domicile==='false'?'selected':''}>✈️ Extérieur</option>
+      </select>
+    </div>
+    <div class="macts">
+      <button class="btn btn-s" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-p" onclick="saveMatchForm('${m.id||''}')">Enregistrer</button>
+    </div>
+  `);
+}
+async function saveMatchForm(id){
+  const d={id:id||undefined,date:$('mD').value,heure:$('mH').value,adversaire:$('mA').value.trim(),
+    categorie:$('mC').value,lieu:$('mL').value.trim(),domicile:$('mDom').value,statut:'programme'};
+  if(!d.adversaire) return toast('Adversaire requis','err');
+  const r=await api('saveMatch',d);
+  if(r.success){ closeModal(); toast('Match enregistré ✓','ok'); loadMatchs(); }
+  else toast(r.error,'err');
+}
+function delMatch(id){
+  openModal('🗑 Supprimer','<p style="margin-bottom:16px">Confirmer la suppression ?</p><div class="macts"><button class="btn btn-s" onclick="closeModal()">Annuler</button><button class="btn btn-d" onclick="doDelMatch(\''+id+'\')">Supprimer</button></div>');
+}
+async function doDelMatch(id){ const r=await api('deleteMatch',{id}); if(r.success){closeModal();toast('Supprimé','ok');loadMatchs();}else toast(r.error,'err'); }
+
+async function openTempsJeu(matchId){
+  const [rm,rj,rt]=await Promise.all([api('getMatch',{id:matchId}),api('getJoueurs',{}),api('getTempsJeu',{match_id:matchId})]);
+  if(!rm.success) return;
+  const m=rm.data;
+  const js=rj.success?rj.data.filter(j=>j.categorie===m.categorie):[];
+  const ex={};
+  if(rt.success) rt.data.forEach(t=>{ex[t.joueur_id]=t.minutes_jouees;});
+  closeModal();
+  openModal('⏱ Temps de jeu · vs '+m.adversaire,`
+    <div style="max-height:50vh;overflow-y:auto;margin-bottom:12px">
+      ${js.map(j=>`<div class="tjrow">
+        <div class="tjname">${j.prenom} ${j.nom}</div>
+        <input class="tjinput" type="number" min="0" max="200" id="tj_${j.id}" value="${ex[j.id]||0}">
+        <span style="font-size:12px;color:var(--grey)">min</span>
+      </div>`).join('')}
+    </div>
+    <div class="macts">
+      <button class="btn btn-s" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-p" onclick="saveTJ('${matchId}','${js.map(j=>j.id).join(',')}')">Enregistrer</button>
+    </div>
+  `);
+}
+async function saveTJ(mid,ids){
+  await Promise.all(ids.split(',').filter(Boolean).map(jid=>{
+    const el=document.getElementById('tj_'+jid);
+    if(el) return api('saveTempsJeu',{match_id:mid,joueur_id:jid,minutes_jouees:el.value});
+  }));
+  closeModal(); toast('Temps de jeu enregistré ✓','ok');
+}
+
+// ══════════════════════════════════════════════
+//  ENTRAÎNEMENTS
+// ══════════════════════════════════════════════
+async function loadTrainings(){
+  const el=document.getElementById('trainingsList');
+  el.innerHTML='<div class="loader"><div class="spin"></div>Chargement...</div>';
+  try {
+    const r=await api('getEntrainements',{});
+    if(!r.success) throw new Error(r.error);
+    if(!r.data.length){el.innerHTML='<div class="empty"><div class="ei">📋</div><p>Aucun entraînement</p></div>';return;}
+    let html='<div style="padding:12px 16px 0">';
+    r.data.forEach(e=>{
+      html+=`<div class="card"><div class="card-hd" onclick="openTraining('${e.id}')">
+        <div class="cico">📋</div>
+        <div class="cinf">
+          <div class="cttl">${e.categorie||'Entraînement'}</div>
+          <div class="csub">${fmtDate(e.date)} · ${e.heure_debut||''} → ${e.heure_fin||''} · ${e.lieu||''}</div>
+        </div>
+        <span class="badge bb">${e.type||'Training'}</span>
+      </div></div>`;
+    });
+    html+='</div>'; el.innerHTML=html;
+  } catch(e){el.innerHTML=`<div class="empty"><div class="ei">⚠️</div><p>${e.message}</p></div>`;}
+}
+
+async function openTraining(id){ showScr('scr-training-detail'); await renderTraining(id); }
+async function renderTraining(id){
+  const el=document.getElementById('trainingDetail');
+  el.innerHTML='<div class="loader"><div class="spin"></div></div>';
+  try {
+    const [re,rp]=await Promise.all([api('getEntrainements',{}),api('getPresences',{entrainement_id:id})]);
+    const e=re.success?re.data.find(x=>x.id===id):null;
+    if(!e) throw new Error('Entraînement introuvable');
+    const rj=await api('getJoueurs',{categorie:e.categorie});
+    const js=rj.success?rj.data:[];
+    const pm={};
+    if(rp.success) rp.data.forEach(p=>{pm[p.joueur_id]=p.statut;});
+    S.presBuffer[id]=pm;
+    el.innerHTML=`
+      <div class="psec">
+        <div class="card" style="margin-bottom:14px"><div class="card-body" style="display:block">
+          <div class="irow"><span class="ik">📅 Date</span><span class="iv">${fmtDate(e.date)}</span></div>
+          <div class="irow"><span class="ik">⏰ Horaire</span><span class="iv">${e.heure_debut||''} → ${e.heure_fin||''}</span></div>
+          <div class="irow"><span class="ik">📂 Catégorie</span><span class="iv">${e.categorie||'—'}</span></div>
+          <div class="irow"><span class="ik">📍 Lieu</span><span class="iv">${e.lieu||'—'}</span></div>
+          <div class="irow"><span class="ik">🏷 Type</span><span class="iv">${e.type||'—'}</span></div>
+        </div></div>
+        <div class="stitle">👥 Présences (${js.length})</div>
+        <div class="preslist">
+          ${js.map(j=>{
+            const s=pm[j.id]||'absent';
+            return `<div class="presrow" id="pr_${j.id}">
+              <div class="presname">${j.prenom} ${j.nom}</div>
+              <div class="prestgl">
+                <button class="pbtn ${s==='present'?'p':'off'}" onclick="setPres('${id}','${j.id}','present')">✓</button>
+                <button class="pbtn ${s==='absent'?'a':'off'}" onclick="setPres('${id}','${j.id}','absent')">✗</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="padding:16px 0">
+          <button class="btn btn-p" onclick="savePresences('${id}')">💾 Enregistrer les présences</button>
+        </div>
+      </div>`;
+  } catch(e){el.innerHTML=`<div class="empty"><div class="ei">⚠️</div><p>${e.message}</p></div>`;}
+}
+
+function setPres(eid,jid,s){
+  if(!S.presBuffer[eid]) S.presBuffer[eid]={};
+  S.presBuffer[eid][jid]=s;
+  const row=document.getElementById('pr_'+jid);
+  if(row){
+    row.querySelectorAll('.pbtn').forEach(b=>{b.classList.remove('p','a');b.classList.add('off');});
+    const btns=row.querySelectorAll('.pbtn');
+    if(s==='present'){btns[0].classList.remove('off');btns[0].classList.add('p');}
+    else{btns[1].classList.remove('off');btns[1].classList.add('a');}
+  }
+}
+async function savePresences(eid){
+  const buf=S.presBuffer[eid]||{};
+  const presences=Object.entries(buf).map(([joueur_id,statut])=>({joueur_id,statut}));
+  const r=await api('savePresences',{entrainement_id:eid,presences});
+  if(r.success) toast('Présences enregistrées ✓','ok');
+  else toast(r.error,'err');
+}
+
+function openTrainingForm(){
+  const co=S.cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  openModal('➕ Nouvel entraînement',`
+    <div class="field"><label>Date</label><input id="tD" type="date"></div>
+    <div class="field"><label>Heure début</label><input id="tDe" type="time" value="19:00"></div>
+    <div class="field"><label>Heure fin</label><input id="tFi" type="time" value="21:00"></div>
+    <div class="field"><label>Catégorie</label><select id="tC">${co}</select></div>
+    <div class="field"><label>Lieu</label><input id="tL" placeholder="Gymnase..."></div>
+    <div class="field"><label>Type</label>
+      <select id="tTy"><option>Training</option><option>Technique</option><option>Physique</option><option>Match amical</option></select>
+    </div>
+    <div class="macts">
+      <button class="btn btn-s" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-p" onclick="saveTraining()">Enregistrer</button>
+    </div>
+  `);
+}
+async function saveTraining(){
+  const d={date:$('tD').value,heure_debut:$('tDe').value,heure_fin:$('tFi').value,
+    categorie:$('tC').value,lieu:$('tL').value.trim(),type:$('tTy').value};
+  if(!d.date) return toast('Date requise','err');
+  const r=await api('saveEntrainement',d);
+  if(r.success){closeModal();toast('Entraînement créé ✓','ok');loadTrainings();}
+  else toast(r.error,'err');
+}
+
+// ══════════════════════════════════════════════
+//  CONVOCATIONS
+// ══════════════════════════════════════════════
+async function loadConvos(){
+  const el=document.getElementById('convosList');
+  el.innerHTML='<div class="loader"><div class="spin"></div>Chargement...</div>';
+  try {
+    const r=await api('getConvocations',{});
+    if(!r.success) throw new Error(r.error);
+    const g=r.grouped||{};
+    const days=Object.keys(g).sort((a,b)=>b.localeCompare(a));
+    if(!days.length){el.innerHTML='<div class="empty"><div class="ei">📄</div><p>Aucune convocation</p></div>';return;}
+    let html='<div style="padding:12px 0 0">';
+    days.forEach(day=>{
+      html+=`<div class="day-grp">
+        <div class="day-lbl">📅 ${fmtDate(day)}
+          <button class="pdf-btn" onclick="genPDF('${g[day][0].id}')">📄 PDF</button>
+        </div>`;
+      g[day].forEach(c=>{
+        const nb=(c.joueurs_ids||'').split(',').filter(Boolean).length;
+        html+=`<div class="card" style="margin:0 16px 8px">
+          <div class="card-hd" onclick="openConvoForm(null,'${c.id}')">
+            <div class="cico">📋</div>
+            <div class="cinf">
+              <div class="cttl">vs ${c.adversaire||'?'} · ${c.categorie||''}</div>
+              <div class="csub">RDV ${c.heure_rdv||''} · Match ${c.heure_match||''} · ${c.lieu||''}</div>
+            </div>
+            <span class="badge bb">${nb} joueurs</span>
+          </div>
+        </div>`;
+      });
+      html+='</div>';
+    });
+    html+='</div>'; el.innerHTML=html;
+  } catch(e){el.innerHTML=`<div class="empty"><div class="ei">⚠️</div><p>${e.message}</p></div>`;}
+}
+
+async function genPDF(id){
+  toast('Génération PDF...','');
+  const r=await api('genererPDFConvocation',{id});
+  if(r.success){window.open(r.url,'_blank');toast('PDF généré ✓','ok');}
+  else toast(r.error||'Erreur PDF','err');
+}
+
+async function openConvoForm(c,id){
+  if(id&&!c){ const r=await api('getConvocations',{}); if(r.success){c=r.data.find(x=>x.id===id)||null;} }
+  c=c||{};
+  const rj=await api('getJoueurs',{});
+  const js=rj.success?rj.data:[];
+  const co=S.cats.map(cat=>`<option value="${cat}" ${c.categorie===cat?'selected':''}>${cat}</option>`).join('');
+  const eids=(c.joueurs_ids||'').split(',').filter(Boolean);
+  openModal(c.id?'✏️ Modifier convocation':'📄 Nouvelle convocation',`
+    <div class="field"><label>Catégorie</label><select id="cvC">${co}</select></div>
+    <div class="field"><label>Date du match</label><input id="cvD" type="date" value="${(c.date_match||'').substring(0,10)}"></div>
+    <div class="field"><label>Heure RDV</label><input id="cvR" type="time" value="${c.heure_rdv||''}"></div>
+    <div class="field"><label>Heure match</label><input id="cvM" type="time" value="${c.heure_match||''}"></div>
+    <div class="field"><label>Adversaire</label><input id="cvA" value="${c.adversaire||''}"></div>
+    <div class="field"><label>Lieu</label><input id="cvL" value="${c.lieu||''}"></div>
+    <div class="field"><label>Message coach</label><textarea id="cvMsg">${c.message||''}</textarea></div>
+    <div class="field"><label>👥 Joueurs convoqués</label>
+      <div style="max-height:200px;overflow-y:auto;background:var(--navy-light);padding:10px;border-radius:8px">
+        ${js.map(j=>`<div class="presrow" style="padding:8px 0;border-bottom:1px solid var(--navy-mid)">
+          <div class="presname" style="font-size:14px">${j.prenom} ${j.nom} <span class="tgr">(${j.categorie})</span></div>
+          <input type="checkbox" id="cj_${j.id}" value="${j.id}" ${eids.includes(j.id)?'checked':''}
+            style="width:22px;height:22px;accent-color:var(--orange);cursor:pointer">
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="macts">
+      <button class="btn btn-s" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-p" onclick="saveConvo('${c.id||''}')">Enregistrer</button>
+    </div>
+  `);
+}
+async function saveConvo(id){
+  const checked=[...document.querySelectorAll('[id^="cj_"]:checked')].map(e=>e.value);
+  const d={id:id||undefined,categorie:$('cvC').value,date_match:$('cvD').value,
+    heure_rdv:$('cvR').value,heure_match:$('cvM').value,adversaire:$('cvA').value.trim(),
+    lieu:$('cvL').value.trim(),message:$('cvMsg').value.trim(),
+    joueurs_ids:checked,coach_nom:'Coach'};
+  if(!d.adversaire) return toast('Adversaire requis','err');
+  const r=await api('saveConvocation',d);
+  if(r.success){closeModal();toast('Convocation enregistrée ✓','ok');loadConvos();}
+  else toast(r.error,'err');
+}
+
+// ══════════════════════════════════════════════
+//  JOUEUR HOME
+// ══════════════════════════════════════════════
+async function renderJoueurHome(){
+  const j=S.joueur; if(!j) return;
+  const el=document.getElementById('joueurHome');
+  const rs=await api('getStatsJoueur',{joueur_id:j.id});
+  const st=rs.success?rs.data:{};
+  el.innerHTML=`
+    <div class="prof-hdr">
+      <div class="prof-av">${((j.prenom||'')[0]||'')+((j.nom||'')[0]||'')}</div>
+      <div class="prof-name">${j.prenom} ${j.nom}</div>
+      <div class="prof-sub">${j.categorie||''} · Licence ${j.numero_licence||'—'}</div>
+    </div>
+    <div class="sgrid">
+      <div class="scard"><div class="sval">${st.matchs_joues||0}</div><div class="slbl">Matchs joués</div></div>
+      <div class="scard"><div class="sval">${st.minutes_totales||0}</div><div class="slbl">Minutes</div></div>
+      <div class="scard"><div class="sval">${st.convocations||0}</div><div class="slbl">Convocations</div></div>
+      <div class="scard"><div class="sval">${st.taux_presence||0}%</div><div class="slbl">Assiduité training</div></div>
+    </div>
+    <div class="psec"><div class="stitle">📅 Mes matchs</div><div id="jMatchs"><div class="loader"><div class="spin"></div></div></div></div>
+  `;
+  const rm=await api('getMatchs',{categorie:j.categorie});
+  const jm=document.getElementById('jMatchs');
+  if(rm.success&&rm.data.length){
+    jm.innerHTML=rm.data.slice(0,6).map(m=>`
+      <div class="mcard-pub">
+        <div class="mcard-top">
+          <div>
+            <div style="font-family:var(--font-d);font-size:16px;font-weight:700">vs ${m.adversaire||'?'}</div>
+            <div style="font-size:12px;color:var(--grey)">${fmtDate(m.date)} · ${m.heure||''}</div>
+          </div>
+          ${m.statut!=='programme'?`<div class="mscore"><span class="msnum">${m.score_nous}</span><span class="mssep">-</span><span class="msnum">${m.score_eux}</span></div>`:'<span class="badge bgr">À venir</span>'}
+        </div>
+      </div>`).join('');
+  } else { jm.innerHTML='<div class="empty" style="height:80px"><p>Aucun match</p></div>'; }
+}
+
+// ══════════════════════════════════════════════
+//  PUBLIC
+// ══════════════════════════════════════════════
+async function loadPublicHome(){
+  const el=document.getElementById('publicHome');
+  el.innerHTML='<div class="loader"><div class="spin"></div>Chargement...</div>';
+  try {
+    const [rm,rc]=await Promise.all([api('getMatchs',{}),api('getConfig')]);
+    const ms=rm.success?rm.data:[];
+    const cfg=rc.success?rc.data:{};
+    const term=ms.filter(m=>m.statut==='termine');
+    const vict=term.filter(m=>parseInt(m.score_nous)>parseInt(m.score_eux)).length;
+    let html=`
+      <div class="hero"><div class="hero-ball">🏀</div>
+        <div><div class="hero-name">${cfg.club_nom||'PERL Basket'}</div>
+        <div class="hero-sub">Résultats · ${cfg.saison||''}</div></div>
+      </div>
+      <div class="hgrid" style="padding:16px 16px 0">
+        <div class="htile"><div class="ticon">🏆</div><div class="tlabel">Matchs</div><div class="tcount">${ms.length}</div></div>
+        <div class="htile"><div class="ticon">🥇</div><div class="tlabel">Victoires</div><div class="tcount">${vict}</div></div>
+      </div>
+      <div style="padding:16px"><div class="stitle">📅 Calendrier & résultats</div>`;
+    if(!ms.length) html+='<div class="empty"><p>Aucun match</p></div>';
+    ms.forEach(m=>{
+      html+=`<div class="mcard-pub">
+        <div class="mcard-top">
+          <div>
+            <div style="font-family:var(--font-d);font-size:17px;font-weight:700">vs ${m.adversaire||'?'}</div>
+            <div style="font-size:12px;color:var(--grey)">${m.categorie||''} · ${m.domicile==='true'?'🏠':'✈️'} ${m.lieu||''}</div>
+          </div>
+          ${m.statut==='programme'?'<span class="badge bgr">À venir</span>':''}
+          ${m.statut==='en_cours'?'<span class="badge bo">🔴 Live</span>':''}
+          ${m.statut==='termine'?`<div class="mscore">
+            <span class="msnum" style="color:${parseInt(m.score_nous)>parseInt(m.score_eux)?'var(--green)':'var(--red)'}">${m.score_nous}</span>
+            <span class="mssep">-</span><span class="msnum">${m.score_eux}</span>
+          </div>`:''}
+        </div>
+        <div class="mcard-ft"><span>📅 ${fmtDate(m.date)}</span><span>⏰ ${m.heure||'—'}</span></div>
+      </div>`;
+    });
+    html+='</div>'; el.innerHTML=html;
+  } catch(e){el.innerHTML=`<div class="empty"><div class="ei">⚠️</div><p>${e.message}</p></div>`;}
+}
+
+// ══════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════
+function openModal(title,body){
+  document.getElementById('modalTtl').innerHTML=title+'<button class="mcls" onclick="closeModal()">✕</button>';
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('overlay').classList.remove('hide');
+}
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('overlay')) return;
+  document.getElementById('overlay').classList.add('hide');
+}
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+let tt;
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast'+(type?' '+type:'');
+  clearTimeout(tt); tt=setTimeout(()=>el.classList.add('hide'),2800);
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function $(id){return document.getElementById(id);}
+function fmtDate(d){
+  if(!d) return '—';
+  try{return new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});}
+  catch(e){return d;}
+}
+</script>
+</body>
+</html>
